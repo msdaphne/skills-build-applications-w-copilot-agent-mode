@@ -16,7 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, TeamViewSet, ActivityViewSet, WorkoutViewSet, LeaderboardViewSet, api_root
+from .views import UserViewSet, TeamViewSet, ActivityViewSet, WorkoutViewSet, LeaderboardViewSet
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+import os
+
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -24,6 +29,26 @@ router.register(r'teams', TeamViewSet, basename='team')
 router.register(r'activities', ActivityViewSet, basename='activity')
 router.register(r'workouts', WorkoutViewSet, basename='workout')
 router.register(r'leaderboards', LeaderboardViewSet, basename='leaderboard')
+
+CODESPACE_NAME = os.environ.get('CODESPACE_NAME')
+def get_base_url(request):
+    if CODESPACE_NAME:
+        return f"https://{CODESPACE_NAME}-8000.app.github.dev/api/"
+    else:
+        scheme = request.scheme
+        host = request.get_host()
+        return f"{scheme}://{host}/api/"
+
+@api_view(['GET'])
+def api_root(request, format=None):
+    base_url = get_base_url(request)
+    return Response({
+        'users': base_url + 'users/',
+        'teams': base_url + 'teams/',
+        'activities': base_url + 'activities/',
+        'workouts': base_url + 'workouts/',
+        'leaderboards': base_url + 'leaderboards/',
+    })
 
 urlpatterns = [
     path('admin/', admin.site.urls),
